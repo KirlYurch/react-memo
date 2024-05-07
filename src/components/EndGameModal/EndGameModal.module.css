@@ -1,6 +1,6 @@
 .modal {
   width: 480px;
-  height: 459px;
+  height: 634px;
   border-radius: 12px;
   background: #c2f5ff;
   display: flex;
@@ -16,6 +16,10 @@
 }
 
 .title {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  width: 260px;
   color: #004980;
   font-variant-numeric: lining-nums proportional-nums;
   font-family: StratosSkyeng;
@@ -25,6 +29,83 @@
   line-height: 48px;
 
   margin-bottom: 28px;
+}
+.title_leaderboard {
+  margin-top: 10px;
+  font-family: StratosSkyeng;
+  font-size: 18px;
+  color: #004980;
+  line-height: 32px;
+  font-weight: 400;
+  text-decoration: none;
+  position: relative;
+  transition: all 0.25s;
+}
+.title_leaderboard:hover {
+  transform: scale(1.02);
+}
+
+.title_leaderboard:before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1.7px;
+  bottom: 3px;
+  background-color: #004980;
+  transform: scaleX(0);
+  transform-origin: bottom right;
+  transition: transform 0.3s ease-out;
+}
+
+.title_leaderboard:hover:before {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}
+
+.input_user {
+  width: 246px;
+  height: 45px;
+  top: 334px;
+  left: 374px;
+  border-radius: 10px;
+  font-family: StratosSkyeng;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 32px;
+  letter-spacing: 0em;
+  text-align: center;
+  border: none;
+  color: #010101;
+  margin-bottom: 10px;
+}
+
+.buttonmode_addscore {
+  margin-top: 8px;
+  margin-bottom: 8px;
+
+  width: 140px;
+  height: 30px;
+  border-radius: 12px;
+  background: #7ac100;
+
+  text-align: center;
+  font-variant-numeric: lining-nums proportional-nums;
+
+  font-family: StratosSkyeng;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 32px;
+
+  border: none;
+
+  cursor: pointer;
+}
+
+.button_addscore:hover {
+  background: #7ac100cc;
 }
 
 .description {
@@ -46,6 +127,5 @@
   font-style: normal;
   font-weight: 400;
   line-height: 72px;
-
-  margin-bottom: 40px;
+  margin-bottom: 25px;
 }
