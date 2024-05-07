@@ -66,7 +66,13 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
     setTimer(getTimerValue(startDate, null));
     setStatus(STATUS_IN_PROGRESS);
   }
-
+  function resetGame() {
+    setGameStartDate(null);
+    setGameEndDate(null);
+    setTimer(getTimerValue(null, null));
+    setStatus(STATUS_PREVIEW);
+    setAttempts(isEnabled ? 3 : 1);
+  }
 
  // Состояние для количества попыток в начале игры
  const maxAttempts = isEnabled ? 3 : 1;
@@ -78,17 +84,6 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
      finishGame(STATUS_LOST);
    }
  };
-
-  function resetGame() {
-    setGameStartDate(null);
-    setGameEndDate(null);
-    setTimer(getTimerValue(null, null));
-    setStatus(STATUS_PREVIEW);
-
-    setAttempts(isEnabled ? 3 : 1);
-  }
-
- 
 
   /**
    * Обработка основного действия в игре - открытие карты.

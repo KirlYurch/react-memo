@@ -1,5 +1,5 @@
 import styled, { keyframes } from "styled-components";
-
+import { Link } from "react-router-dom";
 export const ContainerDiv = styled.div`
   width: 100%;
   min-height: 100%;
@@ -109,6 +109,7 @@ const rotateAnimation = keyframes`
 
 export const MainContentGoButton = styled.button`
   margin-top: 40px;
+  margin-bottom: 30px;
   width: 246px;
   height: 50px;
   font-size: 24px;
@@ -133,6 +134,10 @@ export const LabelEasy = styled.label`
   align-items: center;
   gap: 10px;
   cursor: pointer;
+  transition: all 0.25s;
+  &:hover {
+    transform: scale(1.02);
+  }
 `;
 
 export const P1Easy = styled.p`
@@ -149,6 +154,7 @@ export const SwitchEasy = styled.div`
   border-radius: 32px;
   padding: 4px;
   transition: 300ms all;
+  
 
   &:before {
     transition: 300ms all;
@@ -168,11 +174,48 @@ export const InputEasy = styled.input`
   opacity: 0;
   position: absolute;
 
+ 
+
   &:checked + ${SwitchEasy} {
     background: #7ac100;
 
     &:before {
       transform: translate(10.67px, -50%);
     }
+  }
+`;
+
+export const LinkLeaderboard = styled(Link)`
+ 
+  font-family: StratosSkyeng;
+  font-size: 18px;
+  color: #004980;
+  line-height: 32px;
+  font-weight: 400;
+text-decoration: none;
+  position: relative;
+  transition: all 0.25s;
+
+  &:hover {
+    transform: scale(1.02);
+  }
+
+  &:before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 1.7px; 
+    bottom: 3px;
+    background-color: #004980; 
+    transform: scaleX(0); 
+    transform-origin: bottom right;
+    transition: transform 0.3s ease-out;
+  }
+
+  &:hover:before {
+    transform: scaleX(1); 
+    transform-origin: bottom left;
   }
 `;

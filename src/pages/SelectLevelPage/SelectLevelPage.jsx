@@ -4,7 +4,7 @@ import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 
 export function SelectLevelPage() {
-  const { isEnabled, setIsEnabled } = useContext(ModeContext);
+  const { isEnabled, setIsEnabled, selectedLevel, setSelectedLevel }= useContext(ModeContext);
   const navigate = useNavigate();
 
   const [checked, setChecked] = useState(false);
@@ -14,19 +14,14 @@ export function SelectLevelPage() {
   };
 
   // Логика выбора уровня
-  const [selectedLevel, setSelectedLevel] = useState(""); // Состояние для хранения выбранного уровня
   const handleRadioChange = (e) => {
-    setSelectedLevel(e.target.value);
-    console.log(e.target.value); // Обновляем состояние выбранного уровня при изменении радиокнопки
+    setSelectedLevel(e.target.value); 
   };
-  const handleStartClick = () => {
-    // Проверяем, выбран ли какой-либо уровень
-    if (selectedLevel) {
-      // Если выбран, переходим по ссылке, соответствующей выбранному уровню
 
+  const handleStartClick = () => {
+    if (selectedLevel) {
       navigate(`/game/${selectedLevel}`);
     } else {
-      // В противном случае выводим сообщение об ошибке или предпринимаем другие действия
       console.error("Выберите уровень!");
     }
   };
@@ -70,7 +65,11 @@ export function SelectLevelPage() {
             Старт
           </S.MainContentGoButton>
 
-          <div style={{ paddingTop: "80px" }}>
+          <S.LinkLeaderboard to="/leaderboard">
+            Перейти к лидерборду
+          </S.LinkLeaderboard>
+
+          <div style={{ paddingTop: "50px" }}>
             <S.LabelEasy>
               <S.P1Easy>Режим "3 Жизни"</S.P1Easy>
               <S.InputEasy
