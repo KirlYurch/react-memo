@@ -6,6 +6,7 @@ import { EndGameModal } from "../../components/EndGameModal/EndGameModal";
 import { Button } from "../../components/Button/Button";
 import { Card } from "../../components/Card/Card";
 import { ModeContext } from "../../context/ModeContext";
+import { useAchievements } from "../../context/AchievementContext";
 
 // Игра закончилась
 const STATUS_LOST = "STATUS_LOST";
@@ -27,9 +28,9 @@ function getTimerValue(startDate, endDate) {
     endDate = new Date();
   }
 
-  const diffInSecconds = Math.floor((endDate.getTime() - startDate.getTime()) / 1000);
-  const minutes = Math.floor(diffInSecconds / 60);
-  const seconds = diffInSecconds % 60;
+  const diffInSeconds = Math.floor((endDate.getTime() - startDate.getTime()) / 1000);
+  const minutes = Math.floor(diffInSeconds / 60);
+  const seconds = diffInSeconds % 60;
   return {
     minutes,
     seconds,
@@ -44,7 +45,10 @@ function getTimerValue(startDate, endDate) {
 
 export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
   const { isEnabled } = useContext(ModeContext);
+  const { addAchievement, resetAchievements } = useAchievements();
+  // const { addAchievement, resetAchievements } = useContext(AchievementsContex);
   const [cards, setCards] = useState([]);
+
   const [status, setStatus] = useState(STATUS_PREVIEW);
 
   const [gameStartDate, setGameStartDate] = useState(null);
@@ -55,100 +59,189 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
     minutes: 0,
   });
 
+  const maxAttempts = isEnabled ? 3 : 1;
+  const [attempts, setAttempts] = useState(maxAttempts);
+  const [isVision, setIsVision] = useState(false);
+  const [isVisionActive, seIisVisionActive] = useState(false);
+  const [isTimerStop, setIsTimerStop] = useState(false);
+  const [isAlohomora, setIsAlohomora] = useState(false);
+
+  const vision = () => {
+    setIsTimerStop(true);
+    if (isVision) {
+      return;
+    }
+
+    seIisVisionActive(true);
+    setCards(prevCards => {
+      return prevCards.map(card => {
+        return {
+          ...card,
+          open: true,
+        };
+      });
+    });
+    setTimeout(() => {
+      setCards(prevCards => {
+        return prevCards.map(card => {
+          if (card.guessed) {
+            return {
+              ...card,
+              open: true,
+            };
+          }
+          return {
+            ...card,
+            open: false,
+          };
+        });
+      });
+      seIisVisionActive(false);
+      setIsVision(true);
+      setIsTimerStop(false);
+      let newDate = new Date(gameStartDate);
+      newDate.setSeconds(newDate.getSeconds() + 5);
+      setGameStartDate(newDate);
+    }, 5000);
+  };
+
+  const alohomora = () => {
+    if (isVisionActive) {
+      return;
+    }
+
+    const closedCards = cards.filter(card => !card.open && !card.guessed);
+
+    if (closedCards.length < 2) {
+      return;
+    }
+
+    const randomIndex = Math.floor(Math.random() * closedCards.length);
+    const firstCard = closedCards[randomIndex];
+
+    const secondCard = closedCards.find(
+      card => card.id !== firstCard.id && card.rank === firstCard.rank && card.suit === firstCard.suit,
+    );
+
+    if (secondCard) {
+      const nextCards = cards.map(card => {
+        if (card.id === firstCard.id || card.id === secondCard.id) {
+          return {
+            ...card,
+            open: true,
+            guessed: true,
+          };
+        }
+        return card;
+      });
+
+      setCards(nextCards);
+      setIsAlohomora(true);
+    }
+  };
+
   function finishGame(status = STATUS_LOST) {
     setGameEndDate(new Date());
     setStatus(status);
+
+    if (status === STATUS_WON) {
+      if (!isAlohomora && !isVision) {
+        addAchievement(1);
+      }
+      if (!isEnabled) {
+        addAchievement(2);
+      }
+    }
   }
+
   function startGame() {
     const startDate = new Date();
     setGameEndDate(null);
     setGameStartDate(startDate);
     setTimer(getTimerValue(startDate, null));
     setStatus(STATUS_IN_PROGRESS);
+    resetAchievements();
+    setIsVision(false);
+    setIsAlohomora(false);
   }
+
   function resetGame() {
     setGameStartDate(null);
     setGameEndDate(null);
     setTimer(getTimerValue(null, null));
     setStatus(STATUS_PREVIEW);
     setAttempts(isEnabled ? 3 : 1);
+    resetAchievements();
+    setIsVision(false);
+    setIsAlohomora(false);
   }
 
- // Состояние для количества попыток в начале игры
- const maxAttempts = isEnabled ? 3 : 1;
- const [attempts, setAttempts] = useState(maxAttempts);
- const handleAttempts = e => {
-   e--;
-   setAttempts(e);
-   if (e <= 0) {
-     finishGame(STATUS_LOST);
-   }
- };
-
-  /**
-   * Обработка основного действия в игре - открытие карты.
-   * После открытия карты игра может пепереходит в следующие состояния
-   * - "Игрок выиграл", если на поле открыты все карты
-   * - "Игрок проиграл", если на поле есть две открытые карты без пары
-   * - "Игра продолжается", если не случилось первых двух условий
-   */
+  const handleAttempts = () => {
+    const updatedAttempts = attempts - 1;
+    setAttempts(updatedAttempts);
+    if (updatedAttempts <= 0) {
+      finishGame(STATUS_LOST);
+    }
+  };
 
   const openCard = clickedCard => {
-    // Если карта уже открыта, то ничего не делаем
-    if (clickedCard.open) {
+    if (clickedCard.open || status !== STATUS_IN_PROGRESS) {
       return;
     }
+
+    const openCards = cards.filter(card => card.open && !card.guessed);
+
+    if (openCards.length >= 2) {
+      return;
+    }
+
     // Игровое поле после открытия кликнутой карты
     const nextCards = cards.map(card => {
-      if (card.id !== clickedCard.id) {
-        return card;
+      if (card.id === clickedCard.id || card.guessed) {
+        return {
+          ...card,
+          open: true,
+        };
       }
-      return {
-        ...card,
-        open: true,
-      };
+      return card;
     });
-
     setCards(nextCards);
 
-    const isPlayerWon = nextCards.every(card => card.open);
+    const openPairs = nextCards.filter(card => card.open && !card.guessed);
+    const guessedPairs = openPairs.filter(card =>
+      openPairs.some(openCard => card.id !== openCard.id && card.suit === openCard.suit && card.rank === openCard.rank),
+    );
 
-    // Победа - все карты на поле открыты
-    if (isPlayerWon) {
-      finishGame(STATUS_WON);
-      return;
-    }
-    // Открытые карты на игровом поле
-    const openCards = nextCards.filter(card => card.open);
-
-    // Ищем открытые карты, у которых нет пары среди других открытых
-    const openCardsWithoutPair = openCards.filter(card => {
-      const sameCards = openCards.filter(openCard => card.suit === openCard.suit && card.rank === openCard.rank);
-
-      if (sameCards.length < 2) {
-        return true;
-      }
-
-      return false;
-    });
-
-    // Потеря попыток
-    const pickedWrong = openCardsWithoutPair.length >= 2;
-    if (pickedWrong) {
-      handleAttempts(attempts);
-
-      if (isEnabled) {
-        setTimeout(() => {
-          const resetCards = nextCards.map(card => ({
+    if (guessedPairs.length === 2) {
+      const updatedCards = nextCards.map(card => {
+        if (guessedPairs.some(guessedCard => card.id === guessedCard.id)) {
+          return {
             ...card,
-            open: false,
-          }));
-          setCards(resetCards);
-        }, 1000);
+            guessed: true,
+          };
+        }
+        return card;
+      });
+      setCards(updatedCards);
+      const isPlayerWon = updatedCards.every(card => card.guessed);
+      if (isPlayerWon) {
+        finishGame(STATUS_WON);
       }
-      return;
+    } else if (openPairs.length === 2) {
+      handleAttempts();
+      setTimeout(() => {
+        const resetCards = nextCards.map(card => {
+          if (!card.guessed) {
+            return {
+              ...card,
+              open: false,
+            };
+          }
+          return card;
+        });
+        setCards(resetCards);
+      }, 1000);
     }
-    // ... игра продолжается
   };
 
   const isGameEnded = status === STATUS_LOST || status === STATUS_WON;
@@ -160,7 +253,6 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
       return;
     }
 
-    // В статусе превью мы
     if (pairsCount > 36) {
       alert("Столько пар сделать невозможно");
       return;
@@ -182,12 +274,15 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
   // Обновляем значение таймера в интервале
   useEffect(() => {
     const intervalId = setInterval(() => {
+      if (isTimerStop) {
+        return;
+      }
       setTimer(getTimerValue(gameStartDate, gameEndDate));
     }, 300);
     return () => {
       clearInterval(intervalId);
     };
-  }, [gameStartDate, gameEndDate]);
+  }, [gameStartDate, gameEndDate, isTimerStop]);
 
   return (
     <div className={styles.container}>
@@ -213,9 +308,25 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
           )}
         </div>
         {status === STATUS_IN_PROGRESS ? (
-          <div className={styles.div}>
+          <>
+            <div className={styles.bar}>
+              <button
+                className={styles.vision}
+                title="Прозрение"
+                hint="На 5 секунд показываются все карты. Таймер длительности игры на это время останавливается."
+                onClick={vision}
+                disabled={isVision}
+              />
+              <button
+                className={styles.alohomora}
+                title="Алохомора"
+                hint="Открывается случайная пара карт."
+                onClick={alohomora}
+                disabled={isAlohomora || isVisionActive}
+              />
+            </div>
             <Button onClick={resetGame}>Начать заново</Button>
-          </div>
+          </>
         ) : null}
       </div>
 
@@ -230,15 +341,18 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
           />
         ))}
       </div>
-      <div className={styles.attempts_wrapper}>
-        {isEnabled ? <p className={styles.attempts_txt}>Попытки: </p> : ""}
-        {isEnabled ? (
-          <p className={styles.attempts_counter}>
-            {attempts} из {maxAttempts}
-          </p>
-        ) : (
-          ""
-        )}
+
+      <div className={styles.footer_box}>
+        <div className={styles.bar_element}>
+          {isEnabled ? <p className={styles.attempts_txt}>Жизни: </p> : ""}
+          {isEnabled ? (
+            <p className={styles.attempts_counter}>
+              {attempts} / {maxAttempts}
+            </p>
+          ) : (
+            ""
+          )}
+        </div>
       </div>
 
       {isGameEnded ? (

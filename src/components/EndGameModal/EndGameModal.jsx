@@ -6,6 +6,7 @@ import { ModeContext } from "../../context/ModeContext";
 import { useContext, useState } from "react";
 import { addLeaders } from "../../utils/api";
 import { Link } from "react-router-dom";
+import { useAchievements } from "../../context/AchievementContext";
 
 export function EndGameModal({
   isWon,
@@ -13,6 +14,7 @@ export function EndGameModal({
   gameDurationMinutes,
   onClick,
 }) {
+  const { achievements } = useAchievements();
   const { selectedLevel } = useContext(ModeContext);
   const [username, setUsername] = useState("");
 
@@ -26,7 +28,7 @@ export function EndGameModal({
       return;
     }
     const totalTimeInSeconds = gameDurationMinutes * 60 + gameDurationSeconds;
-    addLeaders({ name: username, time: totalTimeInSeconds })
+    addLeaders({ name: username, time: totalTimeInSeconds, achievements: achievements })
       .then(() => {
         alert("Пользователь добавлен");
         onClick();
