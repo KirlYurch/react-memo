@@ -1,29 +1,90 @@
-import { Link } from "react-router-dom";
-import styles from "./SelectLevelPage.module.css";
+import { ModeContext } from "../../context/ModeContext.jsx";
+import * as S from "./SelectLevelPage.module.js";
+import { useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 
 export function SelectLevelPage() {
+  const { isEnabled, setIsEnabled, selectedLevel, setSelectedLevel }= useContext(ModeContext);
+  const navigate = useNavigate();
+
+  const [checked, setChecked] = useState(false);
+  const handleChange = (e) => {
+    setChecked(e.target.checked);
+    setIsEnabled(!isEnabled);
+  };
+
+  // Логика выбора уровня
+  const handleRadioChange = (e) => {
+    setSelectedLevel(e.target.value); 
+  };
+
+  const handleStartClick = () => {
+    if (selectedLevel) {
+      navigate(`/game/${selectedLevel}`);
+    } else {
+      console.error("Выберите уровень!");
+    }
+  };
+  // Логика выбора уровня
+
   return (
-    <div className={styles.container}>
-      <div className={styles.modal}>
-        <h1 className={styles.title}>Выбери сложность</h1>
-        <ul className={styles.levels}>
-          <li className={styles.level}>
-            <Link className={styles.levelLink} to="/game/3">
-              1
-            </Link>
-          </li>
-          <li className={styles.level}>
-            <Link className={styles.levelLink} to="/game/6">
-              2
-            </Link>
-          </li>
-          <li className={styles.level}>
-            <Link className={styles.levelLink} to="/game/9">
-              3
-            </Link>
-          </li>
-        </ul>
-      </div>
-    </div>
+    <S.ContainerDiv>
+      <S.ModalDiv>
+        <S.MainContentForm>
+          <S.TitleH1>Выберите сложность</S.TitleH1>
+          <S.ChooseDifContainerDiv>
+            <input
+              value="3"
+              name="choose_input"
+              type="radio"
+              id="choose_input_1"
+              onChange={handleRadioChange}
+            />
+            <S.Label htmlFor="choose_input_1">1</S.Label>
+
+            <input
+              value="6"
+              name="choose_input"
+              type="radio"
+              id="choose_input_2"
+              onChange={handleRadioChange}
+            />
+            <S.Label htmlFor="choose_input_2">2</S.Label>
+
+            <input
+              value="9"
+              name="choose_input"
+              type="radio"
+              id="choose_input_3"
+              onChange={handleRadioChange}
+            />
+            <S.Label htmlFor="choose_input_3">3</S.Label>
+          </S.ChooseDifContainerDiv>
+
+          <S.MainContentGoButton type="button" onClick={handleStartClick}>
+            Старт
+          </S.MainContentGoButton>
+
+          <S.LinkLeaderboard to="/leaderboard">
+            Перейти к лидерборду
+          </S.LinkLeaderboard>
+
+          <div style={{ paddingTop: "50px" }}>
+            <S.LabelEasy>
+              <S.P1Easy>Режим "3 Жизни"</S.P1Easy>
+              <S.InputEasy
+                checked={isEnabled}
+                type="checkbox"
+                onChange={(e) => {
+                  handleChange(e);
+                  setIsEnabled(!isEnabled);
+                }}
+              />
+              <S.SwitchEasy />
+            </S.LabelEasy>
+          </div>
+        </S.MainContentForm>
+      </S.ModalDiv>
+    </S.ContainerDiv>
   );
 }
